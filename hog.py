@@ -191,6 +191,18 @@ def max_scoring_num_rolls(dice=six_sided):
     10
     """
     "*** YOUR CODE HERE ***"
+    i = 1
+    score_list = []
+    while i <= 10:
+        average_score = make_averaged(roll_dice, num_samples=1000)(i, dice)
+        score_list.append(average_score)
+        print(i, 'dice scores', average_score, 'on average')
+        i = i + 1
+    max_value = max(score_list)
+    highest_average_rolls = score_list.index(max_value) + 1
+    return highest_average_rolls
+
+
 
 def winner(strategy0, strategy1):
     """Return 0 if strategy0 wins against strategy1, and 1 otherwise."""
@@ -236,6 +248,9 @@ def bacon_strategy(score, opponent_score, margin=8, num_rolls=5):
     """
     "*** YOUR CODE HERE ***"
     return 5 # Replace this statement
+
+    
+    
 
 def swap_strategy(score, opponent_score, margin=8, num_rolls=5):
     """This strategy rolls 0 dice when it would result in a beneficial swap and
