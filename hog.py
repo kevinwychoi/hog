@@ -2,7 +2,6 @@
 
 from dice import four_sided, six_sided, make_test_dice
 from ucb import main, trace, log_current_line, interact
-from operator import mod
 
 GOAL_SCORE = 100 # The goal of Hog is to score 100 points.
 
@@ -22,17 +21,19 @@ def roll_dice(num_rolls, dice=six_sided):
     # These assert statements ensure that num_rolls is a positive integer.
     assert type(num_rolls) == int, 'num_rolls must be an integer.'
     assert num_rolls > 0, 'Must roll at least once.'
-    k = 1
-    sum = 0
-    list = []
-    while k <= num_rolls:
-        roll = dice()
-        sum, k, list = sum + roll, k + 1, list + [roll,]
-        if any(x == 1 for x in list):
-            sum = 1
-    return sum
+    "*** YOUR CODE HERE ***"
+    outcome = 0
+    pigout = 0
+    rolls = []
+    for i in range(num_rolls):
+        rolls.append(dice())
+        if rolls[i] == 1:
+            pigout = 1
+        outcome = outcome + rolls[i]
+    if pigout == 1:
+        outcome = pigout
+    return outcome
 
-    
 
 
 def take_turn(num_rolls, opponent_score, dice=six_sided):
@@ -47,18 +48,17 @@ def take_turn(num_rolls, opponent_score, dice=six_sided):
     assert num_rolls <= 10, 'Cannot roll more than 10 dice.'
     assert opponent_score < 100, 'The game should be over.'
     "*** YOUR CODE HERE ***"
+
+    "Implementing Free Bacon Rule"
+    tens = opponent_score//10
+    ones = opponent_score - tens*10
     if num_rolls == 0:
-        if opponent_score > 9:
-            digit1 = opponent_score // 10
-            digit2 = mod(opponent_score,10)
-            bacon = max(digit1, digit2) + 1
-        else:
-            bacon = opponent_score + 1
-        return bacon
+        score = max(tens, ones) + 1
+
     else:
-        return roll_dice(num_rolls, dice)
+        score = roll_dice(num_rolls, dice)
 
-
+    return score
 
 
 # Playing a game
@@ -67,7 +67,8 @@ def select_dice(score, opponent_score):
     """Select six-sided dice unless the sum of SCORE and OPPONENT_SCORE is a
     multiple of 7, in which case select four-sided dice (Hog wild).
     """
-    if mod(score + opponent_score, 7) == 0:
+    "*** YOUR CODE HERE ***"
+    if (score + opponent_score)%7 == 0:
         return four_sided
     else:
         return six_sided
@@ -80,7 +81,7 @@ def other(who):
     >>> other(1)
     0
     """
-    return 1 - who 
+    return 1 - who
 
 def play(strategy0, strategy1, goal=GOAL_SCORE):
     """Simulate a game and return the final scores of both players, with
@@ -93,27 +94,29 @@ def play(strategy0, strategy1, goal=GOAL_SCORE):
     strategy0:  The strategy function for Player 0, who plays first.
     strategy1:  The strategy function for Player 1, who plays second.
     """
-
     who = 0  # Which player is about to take a turn, 0 (first) or 1 (second)
-    score0, score1 = 0, 0
+    score, opponent_score = 0, 0
 
+    "let score refer to player 0 and opponent_score refer to player 1"
 
-    while score and opponent_score < 100:
+    while score < goal and opponent_score < goal:
+        dice = select_dice(score, opponent_score)
         if who == 0:
-            who_score = score0
-            opponent_score = score1
-            strategy = strategy0(who_score, opponent_score)
-            score0 = score0 + take_turn(strategy, opponent_score, dice)
-        else:
-            who_score = score1
-            opponent_score = score0
-            strategy = strategy1(who_score, opponent_score)
-            score1 = score1 + take_turn(strategy, opponent_score, dice)
+            num_rolls = strategy0(score, opponent_score)
+            score = score + take_turn(num_rolls, opponent_score, dice)
 
-        if score0/score1 == 2 or 0.5: # Implementing swine swap rule
-            score0, score1 = score1, score0
+        else:
+            num_rolls = strategy1(opponent_score, score)
+            opponent_score = opponent_score + take_turn(num_rolls, score, dice)
+
+    
+        "Implementing Swine Swap Rule"
+        if score == 2*opponent_score or opponent_score == 2*score:
+            score, opponent_score = opponent_score, score
+
         who = other(who)
-    return score0, score1
+
+    return score, opponent_score  # You may wish to change this line.
 
 #######################
 # Phase 2: Strategies #
@@ -160,6 +163,13 @@ def make_averaged(fn, num_samples=1000):
     Thus, the average value is 6.0.
     """
     "*** YOUR CODE HERE ***"
+    def averaged_and_return(*args):
+        sum, i = 0, 0
+        while i < num_samples:
+            sum, i = sum + fn(*args), i + 1
+        return sum/num_samples
+    return averaged_and_return
+
 
 def max_scoring_num_rolls(dice=six_sided):
     """Return the number of dice (1 to 10) that gives the highest average turn
